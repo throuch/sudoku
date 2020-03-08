@@ -1,5 +1,6 @@
 package com.nicecactus.sudoku.domain
 
+import com.nicecactus.sudoku.domain.Grid.getSubgridIndices3
 import org.scalatest.FlatSpec
 
 class SudokuSolverTest extends FlatSpec {
@@ -29,6 +30,14 @@ class SudokuSolverTest extends FlatSpec {
   }
 
   it should "possibleValues" in {
+    def nextInGrid(startRow: Index, startCol: Index): Iterator[(Index, Index)] =
+      (for {
+        row <- getSubgridIndices3(startRow)
+        col <- getSubgridIndices3(startCol)
+      } yield (row, col)).iterator
+
+    nextInGrid(4, 4).foreach(x => println(s" x = ${x._1}  y = ${x._2}"))
+
     println(new SudokuSolver(new SudokuGame(new Grid(gridFixture))).possibleValues(2, 1).mkString(" "))
   }
 

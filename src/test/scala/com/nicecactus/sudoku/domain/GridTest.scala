@@ -34,7 +34,11 @@ class GridTest extends FlatSpec {
   }
 
   it should "rowCount" in {
-    cancel("test not implemented")
+    val digitList = (1 to 9).toList
+
+    digitList.foreach(row => println(s" $row ${((row + 7) % 9) + 1}"))
+
+    //cancel("test not implemented")
   }
 
   it should "colCount" in {
@@ -45,6 +49,14 @@ class GridTest extends FlatSpec {
     assert(Grid.getSubgridIndices(4) == List(4, 5, 6))
     assert(Grid.getSubgridIndices(5) == List(4, 5, 6))
     assert(Grid.getSubgridIndices(6) == List(4, 5, 6))
+
+
+    assert(Grid.getSubgridIndices3(4) == List(4, 5, 6))
+    assert(Grid.getSubgridIndices3(5) == List(5, 6, 4))
+    assert(Grid.getSubgridIndices3(6) == List(6, 4, 5))
+
+    assert(Grid.getSubgridIndices3(8) == List(8, 9, 7))
+    assert(Grid.getSubgridIndices3(9) == List(9, 7, 8))
 
   }
 }
