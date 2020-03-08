@@ -113,31 +113,22 @@ class SudokuSolver(game: SudokuGame) {
     }
   }
 
-  private def nextInGrid(row: Index, col: Index): Iterator[(Index, Index)] = new Iterator[(Index, Index)] {
-    //assert(row >= 1 && row <= 9)
-    //assert(col >= 1 && col <= 9)
+  private def nextInGrid(startRow: Index, startCol: Index): Iterator[(Index, Index)] =
+    (for {
+      row <- getSubgridIndices(startRow)
+      col <- getSubgridIndices(startCol)
+    } yield (row, col)).iterator
 
-    var i = 9
 
-    override def hasNext: Boolean = (i > 0)
-
-    override def next(): (Index, Index) = {
-
-      // TODO
-      i -= 1
-      ???
-    }
-  }
-
-  def findFirstEmptyBox(): (Index, Index) = {
-    //game.getColumnDigits(col)
-    for (r <- 1 to 9; c <- 1 to 9) {
-
-      if (game.grid.getDigit(r, c) == 0)
-        return (r, c)
-    }
-    (-1, -1)
-  }
+  //  def findFirstEmptyBox(): (Index, Index) = {
+  //    //game.getColumnDigits(col)
+  //    for (r <- 1 to 9; c <- 1 to 9) {
+  //
+  //      if (game.grid.getDigit(r, c) == 0)
+  //        return (r, c)
+  //    }
+  //    (-1, -1)
+  //  }
 
   def findBestStartBoxByRow(): (Int, (Index, Index)) = {
     (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
@@ -166,7 +157,7 @@ class SudokuSolver(game: SudokuGame) {
       })
   }
 
-  def findBestStartBoxBySubgrid(): (Index, Index) = {
+  def findBestStartBoxBySubgrid(): (Int, (Index, Index)) = {
     (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
       foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
         val max = game.getSubgridDigits(e._1, e._2).size
@@ -175,7 +166,7 @@ class SudokuSolver(game: SudokuGame) {
           (max, e)
         else
           acc
-      })._2
+      })
   }
 
 
@@ -183,13 +174,15 @@ class SudokuSolver(game: SudokuGame) {
     //val (startRow, startCol) = findFirstEmptyBox()
 
     //nextRow(startRow, startCol)
-    val rowOptim = findBestStartBoxByRow()
-    val colOptim = findBestStartBoxByCol()
-    if (rowOptim._1 > colOptim._1)
-      nextRow _ tupled rowOptim._2
-    else
-      nextCol _ tupled colOptim._2
-
+    val rowOptim = (findBestStartBoxByRow(), nextRow _ tupled)
+    val colOptim = (findBestStartBoxByCol(), nextCol _ tupled)
+    val gridOptim = (findBestStartBoxBySubgrid(), nextInGrid _ tupled)
+    //    if (rowOptim._1 > colOptim._1)
+    //      nextRow _ tupled rowOptim._2
+    //    else
+    //      nextCol _ tupled colOptim._2
+    val toto = List(rowOptim, colOptim, gridOptim).maxBy(x => x._1._1)
+    toto._2(toto._1._2)
   }
 
   private def next(): (Index, Index) = {
