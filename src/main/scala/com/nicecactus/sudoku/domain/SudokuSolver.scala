@@ -8,92 +8,223 @@ class SudokuSolver(game: SudokuGame) {
   val digitList = (1 to 9).toSet
 
 
-  var startingRow: Int = 1
-  var startingCol: Int = 1
-  var flag = false
-
-  var next: (Index, Index) => (Index, Index) = nextCol
+  var nextIterator: Iterator[(Index, Index)] = Iterator.empty
+  var emptyBoxes: Int = countEmptyBoxes()
 
   def solve(): Unit = {
 
-    val (srow, scol) = findBestStartBox
 
-    Console.err.println(s"Debug: starting from ($srow, $scol)")
-    startingRow = getSubgridIndices(srow)(0)
-    startingCol = getSubgridIndices(scol)(0)
+    //    Console.err.println(s"Debug: starting from ($srow, $scol)")
+    //    startingRow = getSubgridIndices(srow)(0)
+    //    startingCol = getSubgridIndices(scol)(0)
+    //    Console.err.println(s"Debug: starting from ($startingRow, $startingCol)")
 
-    if (game.getLineDigits(startingRow).size < game.getColumnDigits(startingCol).size)
-      next = nextRow
+    displayOptima()
 
-    val res = tryCombo(startingRow, startingCol)
+    tryCombo()
     //println("")
     game.grid.display()
     //println(s"solved = $res")
   }
 
-  def findBestSequence(): IndexedSeq[(Index, Index)] = {
+
+  def countEmptyBoxes(): Int = {
     (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield
-      (r, c)).sortBy(x => -(game.getSubgridDigits(x._1, x._2).size + game.getLineDigits(x._1).size + game.getColumnDigits(x._2).size))
+      (r, c)).size
   }
 
+  def displayOptima(): Unit = {
 
-  def findBestStartBox(): (Index, Index) = {
-    (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+    println(s"best subgrid : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          val max = game.getSubgridDigits(e._1, e._2).size
+          //        val max1 = game.getLineDigits(e._1).size
+          //        val max2 = game.getColumnDigits(e._2).size
+          //
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+
+    println(s"best column : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          //        val max1 = game.getLineDigits(e._1).size
+          val max = game.getColumnDigits(e._2).size
+          //
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+
+    println(s"best line : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          val max = game.getLineDigits(e._1).size
+          //        val max2 = game.getColumnDigits(e._2).size
+          //
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+
+  }
+
+  def possibleValues(row: Index, col: Index): Set[Digit] =
+    digitList -- game.getSubgridDigits(row, col) -- game.getLineDigits(row) -- game.getColumnDigits(col)
+
+  private def nextCol(startRow: Index, startCol: Index): Iterator[(Index, Index)] = new Iterator[(Index, Index)] {
+    //assert(row >= 1 && row <= 9)
+    //assert(col >= 1 && col <= 9)
+    var i = 9
+    var col = startCol
+
+    override def hasNext: Boolean = (i > 0)
+
+    override def next(): (Index, Index) = {
+      i -= 1
+      val tcol = col
+      col = (col % 9) + 1
+      (startRow, tcol)
+    }
+  }
+
+  private def nextRow(startRow: Index, startCol: Index): Iterator[(Index, Index)] = new Iterator[(Index, Index)] {
+    //assert(row >= 1 && row <= 9)
+    //assert(col >= 1 && col <= 9)
+
+    var i = 9
+    var row = startRow
+
+    override def hasNext: Boolean = (i > 0)
+
+    override def next(): (Index, Index) = {
+      i -= 1
+      val trow = row
+      row = (row % 9) + 1
+      (trow, startCol)
+    }
+  }
+
+  private def nextInGrid(row: Index, col: Index): Iterator[(Index, Index)] = new Iterator[(Index, Index)] {
+    //assert(row >= 1 && row <= 9)
+    //assert(col >= 1 && col <= 9)
+
+    var i = 9
+
+    override def hasNext: Boolean = (i > 0)
+
+    override def next(): (Index, Index) = {
+
+      // TODO
+      i -= 1
+      ???
+    }
+  }
+
+  def findFirstEmptyBox(): (Index, Index) = {
+    //game.getColumnDigits(col)
+    for (r <- 1 to 9; c <- 1 to 9) {
+
+      if (game.grid.getDigit(r, c) == 0)
+        return (r, c)
+    }
+    (-1, -1)
+  }
+
+  def findBestStartBoxByRow(): (Int, (Index, Index)) = {
+    (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
       foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
-        val max = game.getSubgridDigits(e._1, e._2).size + game.getLineDigits(e._1).size + game.getColumnDigits(e._2).size
+        //        val sgrid = game.getSubgridDigits(e._1, e._2).size
+        //        val max1 = game.getLineDigits(e._1).size + sgrid
+        val max = game.getColumnDigits(e._2).size
+        //        val max = Math.max(max1, max2)
+        if (max > acc._1)
+          (max, e)
+        else
+          acc
+      })
+  }
+
+  def findBestStartBoxByCol(): (Int, (Index, Index)) = {
+    (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
+      foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+        //        val sgrid = game.getSubgridDigits(e._1, e._2).size
+        val max = game.getLineDigits(e._1).size
+
+        if (max > acc._1)
+          (max, e)
+        else
+          acc
+      })
+  }
+
+  def findBestStartBoxBySubgrid(): (Index, Index) = {
+    (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
+      foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+        val max = game.getSubgridDigits(e._1, e._2).size
+
         if (max > acc._1)
           (max, e)
         else
           acc
       })._2
-
   }
 
 
-  def possibleValues(row: Index, col: Index): Set[Digit] =
-    digitList -- game.getSubgridDigits(row, col) -- game.getLineDigits(row) -- game.getColumnDigits(col)
+  def findBestConstraintIterator(): Iterator[(Index, Index)] = {
+    //val (startRow, startCol) = findFirstEmptyBox()
 
-  private def nextCol(row: Index, col: Index): (Index, Index) = {
-    //assert(row >= 1 && row <= 9)
-    //assert(col >= 1 && col <= 9)
-    val next_col = (col % 9) + 1
+    //nextRow(startRow, startCol)
+    val rowOptim = findBestStartBoxByRow()
+    val colOptim = findBestStartBoxByCol()
+    if (rowOptim._1 > colOptim._1)
+      nextRow _ tupled rowOptim._2
+    else
+      nextCol _ tupled colOptim._2
 
-    (if (next_col == startingCol) (row % 9) + 1 else row, next_col)
   }
 
-  private def nextRow(row: Index, col: Index): (Index, Index) = {
-    //assert(row >= 1 && row <= 9)
-    //assert(col >= 1 && col <= 9)
-    val next_row = (row % 9) + 1
-    (next_row, if (next_row == startingRow) (col % 9) + 1 else col)
-  }
-
-  private def tryCombo(row: Index, col: Index): Boolean = {
-    //println(s" row: $row col: $col")
-    if (row == startingRow && col == startingCol) {
-      if (flag)
-        return true
-      else
-        flag = true
+  private def next(): (Index, Index) = {
+    if (!nextIterator.hasNext) {
+      nextIterator = findBestConstraintIterator()
     }
+    nextIterator.next()
+  }
+
+  private def tryCombo(): Boolean = {
+    //println(s" row: $row col: $col")
+    if (emptyBoxes == 0)
+      return true
+
+    val (row, col) = next()
 
     val freeBox = (game.grid.getDigit(row, col) == 0)
-    val (next_row, next_col) = next(row, col)
 
     if (freeBox) {
 
       for (v <- possibleValues(row, col) if game.checkConstraints(row, col, v)) {
         game.grid.setDigit(row, col, v)
-
-        if (tryCombo(next_row, next_col))
+        emptyBoxes -= 1
+        if (tryCombo())
           return true
         game.grid.setDigit(row, col, 0)
+        emptyBoxes += 1
       }
 
       false
     }
-    else
-      tryCombo(next_row, next_col)
+    else {
+
+      tryCombo()
+    }
   }
 }
 

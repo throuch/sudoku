@@ -5,7 +5,7 @@ class SudokuGame(val grid: Grid) {
   import Grid._
 
   def checkConstraints(row: Index, col: Index, digit: Digit): Boolean =
-    checkLineConstraint(row, digit, Some(col)) && checkColumnConstraint(col, digit, Some(row)) && checkSubgridConstraint(row, col, digit)
+    checkLineConstraint(row, digit, col) && checkColumnConstraint(col, digit, row) && checkSubgridConstraint(row, col, digit)
 
 
   /**
@@ -16,8 +16,8 @@ class SudokuGame(val grid: Grid) {
    * @param row
    * @return
    */
-  def checkColumnConstraint(col: Index, digit: Digit, row: Option[Index] = None): Boolean =
-    row.fold(true)(o => grid.getDigit(o, col) == 0) && !getColumnDigits(col).contains(digit)
+  def checkColumnConstraint(col: Index, digit: Digit, row: Index): Boolean =
+    (grid.getDigit(row, col) == 0) && !getColumnDigits(col).contains(digit)
 
   /**
    * col is optional, accelerate if provided
@@ -27,8 +27,8 @@ class SudokuGame(val grid: Grid) {
    * @param col
    * @return
    */
-  def checkLineConstraint(row: Index, digit: Digit, col: Option[Index] = None): Boolean =
-    col.fold(true)(o => grid.getDigit(row, o) == 0) && !getLineDigits(row).contains(digit)
+  def checkLineConstraint(row: Index, digit: Digit, col: Index): Boolean =
+    (grid.getDigit(row, col) == 0) && !getLineDigits(row).contains(digit)
 
   def checkSubgridConstraint(row: Index, col: Index, digit: Digit): Boolean =
     grid.getDigit(row, col) == 0 && !getSubgridDigits(row, col).contains(digit)
@@ -44,10 +44,6 @@ class SudokuGame(val grid: Grid) {
   def getLineDigits(row: Index): Set[Digit] = (for (j <- 1 to 9) yield grid.getDigit(row, j)).toSet - 0
 
   def getColumnDigits(col: Index): Set[Digit] = (for (i <- 1 to 9) yield grid.getDigit(i, col)).toSet - 0
-
-}
-
-object SudokuGame {
 
 }
 
