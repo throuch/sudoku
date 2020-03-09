@@ -9,8 +9,6 @@ object MyApp extends App {
     array(i) = readLine.toCharArray.map(_.asDigit)
 
   }
-  Console.err.println(array(0)(0).toString)
-  Console.err.println(array(7)(8).toString)
 
 
 }
