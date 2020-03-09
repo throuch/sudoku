@@ -1,13 +1,25 @@
 package com.nicecactus.sudoku.domain
 
 
-//import shuffle
 class SudokuSolver(game: SudokuGame) {
 
   import Grid._
 
   trait MyIterator extends Iterator[(Index, Index)] {
-    def rewind: Unit
+    var currentIdx = 0
+    val values: Seq[(Index, Index)]
+
+    override def hasNext: Boolean = (currentIdx < values.length)
+
+    override def next(): (Index, Index) = {
+      val res = values(currentIdx)
+      currentIdx += 1
+      res
+    }
+
+    def rewind: Unit = {
+      currentIdx -= 1
+    }
   }
 
 
@@ -15,22 +27,16 @@ class SudokuSolver(game: SudokuGame) {
 
 
   var nextIterator: MyIterator = new MyIterator {
-    override def hasNext = false
-
-    override def next(): (Index, Index) = ???
-
-    override def rewind: Unit = ???
+    override val values: Seq[(Index, Index)] = List.empty
   }
 
   var emptyBoxes: Int = countEmptyBoxes()
 
   def solve(): Unit = {
-
-
     //    Console.err.println(s"Debug: starting from ($srow, $scol)")
     //    Console.err.println(s"Debug: starting from ($startingRow, $startingCol)")
 
-    displayOptima()
+    //displayOptima()
 
     tryCombo()
     //println("")
@@ -40,7 +46,7 @@ class SudokuSolver(game: SudokuGame) {
 
 
   def countEmptyBoxes(): Int = {
-    (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield
+    (for (r <- 1 to 9; c <- 1 to 9 if game.grid.isEmpty(r, c)) yield
       (r, c)).size
   }
 
@@ -94,72 +100,36 @@ class SudokuSolver(game: SudokuGame) {
       game.getLineDigits(row) --
       game.getColumnDigits(col)
 
-  private def nextCol(startRow: Index, startCol: Index): MyIterator = new MyIterator {
-    //assert(row >= 1 && row <= 9)
-    //assert(col >= 1 && col <= 9)
-    var i = 9
-    var col = startCol
-
-    override def hasNext: Boolean = (i > 0)
-
-    override def next(): (Index, Index) = {
-      i -= 1
-      val tcol = col
-      col = (col % 9) + 1
-      (startRow, tcol)
+  private def nextCol(startRow: Index, startCol: Index): MyIterator =
+    new MyIterator {
+      //assert(row >= 1 && row <= 9)
+      //assert(col >= 1 && col <= 9)
+      override val values = for (
+        col <- (-1 until 8);
+        ccol = (startCol + col) % 9 + 1
+        if game.grid.isEmpty(startRow, ccol)
+      ) yield (startRow, ccol)
     }
 
-    override def rewind: Unit = {
-      col = ((col + 7) % 9) + 1
-      i += 1
+  private def nextRow(startRow: Index, startCol: Index): MyIterator =
+    new MyIterator {
+      //assert(row >= 1 && row <= 9)
+      //assert(col >= 1 && col <= 9)
+
+      override val values = for (
+        row <- (-1 until 8);
+        crow = (startRow + row) % 9 + 1
+        if game.grid.isEmpty(crow, startCol)
+      ) yield (crow, startCol)
     }
-
-  }
-
-  private def nextRow(startRow: Index, startCol: Index): MyIterator = new MyIterator {
-    //assert(row >= 1 && row <= 9)
-    //assert(col >= 1 && col <= 9)
-
-    var i = 9
-    var row = startRow
-
-    override def hasNext: Boolean = (i > 0)
-
-    override def next(): (Index, Index) = {
-      i -= 1
-      val trow = row
-      row = (row % 9) + 1
-      (trow, startCol)
-    }
-
-    override def rewind: Unit = {
-      row = ((row + 7) % 9) + 1
-      i += 1
-    }
-  }
 
   private def nextInGrid(startRow: Index, startCol: Index): MyIterator =
     new MyIterator {
-
-      var currentIdx = 0
-      val values = (for {
-        row <- getSubgridIndices(startRow)
-        col <- getSubgridIndices(startCol)
-        if (game.grid.getDigit(row, col) == 0)
+      override val values = (for {
+        row <- getSubgridIndicesRolling(startRow)
+        col <- getSubgridIndicesRolling(startCol)
+        if game.grid.isEmpty(row, col)
       } yield (row, col))
-
-
-      override def hasNext = (currentIdx < values.length)
-
-      override def next(): (Index, Index) = {
-        val res = values(currentIdx)
-        currentIdx += 1
-        res
-      }
-
-      override def rewind: Unit = {
-        currentIdx -= 1
-      }
 
     }
 
@@ -172,24 +142,22 @@ class SudokuSolver(game: SudokuGame) {
   import Constraint._
 
   def findBestStartBox(): (ConstraintType, (Index, Index)) = {
-    (for (r <- 1 to 9; c <- 1 to 9 if (game.grid.getDigit(r, c) == 0)) yield (r, c)).
+    (for (r <- 1 to 9; c <- 1 to 9 if game.grid.isEmpty(r, c)) yield (r, c)).
       foldLeft[((Int, Int), (ConstraintType, (Index, Index)))]((0, 0), (Row, (1, 1)))((acc, e) => {
 
-        val e1 = game.getLineDigits(e._1).size
-        val e2 = game.getColumnDigits(e._2).size
-        val e3 = game.getSubgridDigits(e._1, e._2).size
-        val superMax = e1 + e2 + e3
+        val e1 = game.getLineDigits(e._1)
+        val e2 = game.getColumnDigits(e._2)
+        val e3 = game.getSubgridDigits(e._1, e._2)
+        val superMax = e1 ++ e2 ++ e3
 
         val max = List(
-          (e1, superMax, Row),
-          (e2, superMax, Col),
-          (e3, superMax, Grid)).maxBy(_._1)
+          (e1.size, superMax.size, (Row, e)),
+          (e2.size, superMax.size, (Col, e)),
+          (e3.size, superMax.size, (Constraint.Grid, e)),
+          (acc._1._1, acc._1._2, acc._2)
+        ).max[(Int, Int, _)](Ordering[(Int, Int)].on(x => (x._2, x._1)))
 
-        //Ordering[(Int, String)].on(x => (x._1 , "toot"))
-        if ((max._1 > acc._1._1) || ((max._1 == acc._1._1) && (max._2 > acc._1._2))) {
-          ((max._1, max._2), (max._3, e))
-        } else
-          acc
+        ((max._1, max._2), max._3)
       })._2
   }
 
@@ -204,7 +172,7 @@ class SudokuSolver(game: SudokuGame) {
         //println(s" Row Start:  (row:${o._2._1},col:${o._2._2}) ")
         nextRow _ tupled o._2
       }
-      case o if (o._1 == Grid) => {
+      case o if (o._1 == Constraint.Grid) => {
         //println(s" Grid Start:  (row:${o._2._1},col:${o._2._2}) ")
         nextInGrid _ tupled o._2
       }
@@ -218,33 +186,24 @@ class SudokuSolver(game: SudokuGame) {
   }
 
   private def tryCombo(): Boolean = {
-    //println(s" row: $row col: $col")
     if (emptyBoxes == 0)
       return true
 
     val it = nextIteratorFunc
     val (row, col) = it.next()
-
-    val freeBox = (game.grid.getDigit(row, col) == 0)
-    //println("loop")
-    if (freeBox) {
-
-      for (v <- possibleValues(row, col) if game.checkConstraints(row, col, v)) {
-        game.grid.setDigit(row, col, v)
-        emptyBoxes -= 1
-        if (tryCombo())
-          return true
-        it.rewind
-        game.grid.setDigit(row, col, 0)
-        emptyBoxes += 1
-      }
-
-      false
+    //val pval = possibleValues(row, col)
+    //println(s"debug: possible values ${pval.size}")
+    for (v <- possibleValues(row, col) if game.checkConstraints(row, col, v)) {
+      game.grid.setDigit(row, col, v)
+      emptyBoxes -= 1
+      if (tryCombo())
+        return true
+      //println("debug: rewind")
+      it.rewind
+      game.grid.setDigit(row, col, 0)
+      emptyBoxes += 1
     }
-    else {
-
-      tryCombo()
-    }
+    false
   }
 }
 

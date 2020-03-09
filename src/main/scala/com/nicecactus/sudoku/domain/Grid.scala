@@ -38,6 +38,8 @@ class Grid(val numbers: Array[Array[Digit]]) {
   def getDigit(row: Index, col: Index): Digit =
     numbers(row - 1)(col - 1)
 
+  def isEmpty(row: Index, col: Index): Boolean = (numbers(row - 1)(col - 1) == 0)
+
   def validateContent(): Boolean = {
 
     for (i <- 0 until rowCount; j <- 0 until columnCount) {
@@ -65,45 +67,32 @@ class Grid(val numbers: Array[Array[Digit]]) {
 
 object Grid {
 
+  /**
+   * examples:
+   * 4 -> (4, 5, 6)
+   * 8 -> (7, 8, 9)
+   * 3 -> (1, 2, 3)
+   */
   def getSubgridIndices(idx: Index): List[Index] = {
-
     val base: Index = idx - ((idx - 1) % 3)
-
-
     List(base, base + 1, base + 2)
   }
 
+  /**
+   * examples:
+   * 4 -> (4, 5, 6)
+   * 8 -> (8, 9, 7)
+   * 3 -> (3, 1, 2)
+   *
+   * @param idx
+   * @return
+   */
+  def getSubgridIndicesRolling(idx: Index): List[Index] = {
+    val offset = ((idx - 1) % 3)
+    val base = idx - offset
+    List(idx, (offset + 1) % 3 + base, (offset + 2) % 3 + base)
 
-  def getSubgridIndices3(idx: Index): List[Index] = {
 
-    val base: Index = idx - ((idx - 1) % 3)
-    //
-    //    val offset = ((idx - 1) % 3)
-    //    val q = (idx - 1) / 3
-    //    List(idx + offset, idx + (offset + 1) % 3, idx + (offset + 2) % 3)
-
-    if (idx == base) {
-      List(base, base + 1, base + 2)
-    }
-    else if (idx == base + 1) {
-      List(base + 1, base + 2, base)
-    }
-    else {
-      List(base + 2, base, base + 1)
-    }
   }
-
-  //  def getSubgridIndices2(row: Index, col: Index): List[(Index, Index)] = {
-  //
-  //    val coords = (for {
-  //      row <- getSubgridIndices(row)
-  //      col <- getSubgridIndices(col)
-  //    } yield (row, col))
-  //
-  //    val base: Index = row - ((row - 1) % 3)
-  //
-  //    List(base, base + 1, base + 2)
-  //  }
-
 
 }

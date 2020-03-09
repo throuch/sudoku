@@ -1,5 +1,6 @@
 package com.nicecactus.sudoku.domain
 
+import com.nicecactus.sudoku.domain.Grid.getSubgridIndicesRolling
 import org.scalatest.FlatSpec
 
 class GridTest extends FlatSpec {
@@ -38,6 +39,22 @@ class GridTest extends FlatSpec {
 
     digitList.foreach(row => println(s" $row ${((row + 7) % 9) + 1}"))
 
+    val startCol = 5
+    val startRow = 6
+    //    val values = for (
+    //      col <- (0 until 9);
+    //      ccol = (startCol - 1 + col) % 9 + 1
+    //
+    //    ) yield (startRow, ccol)
+
+    val values = (for {
+      row <- getSubgridIndicesRolling(startRow)
+      col <- getSubgridIndicesRolling(startCol)
+
+    } yield (row, col))
+
+
+    println(values.mkString("  "))
     //cancel("test not implemented")
   }
 
@@ -51,12 +68,12 @@ class GridTest extends FlatSpec {
     assert(Grid.getSubgridIndices(6) == List(4, 5, 6))
 
 
-    assert(Grid.getSubgridIndices3(4) == List(4, 5, 6))
-    assert(Grid.getSubgridIndices3(5) == List(5, 6, 4))
-    assert(Grid.getSubgridIndices3(6) == List(6, 4, 5))
+    assert(Grid.getSubgridIndicesRolling(4) == List(4, 5, 6))
+    assert(Grid.getSubgridIndicesRolling(5) == List(5, 6, 4))
+    assert(Grid.getSubgridIndicesRolling(6) == List(6, 4, 5))
 
-    assert(Grid.getSubgridIndices3(8) == List(8, 9, 7))
-    assert(Grid.getSubgridIndices3(9) == List(9, 7, 8))
+    assert(Grid.getSubgridIndicesRolling(8) == List(8, 9, 7))
+    assert(Grid.getSubgridIndicesRolling(9) == List(9, 7, 8))
 
   }
 }
