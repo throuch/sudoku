@@ -9,15 +9,20 @@ class SudokuSolver(game: SudokuGame) {
     var currentIdx = 0
     val values: Seq[(Index, Index)]
 
-    override def hasNext: Boolean = (currentIdx < values.length)
+    override def hasNext: Boolean = {
+      assert(currentIdx >= 0)
+      (currentIdx < values.length)
+    }
 
     override def next(): (Index, Index) = {
+      assert(currentIdx >= 0)
       val res = values(currentIdx)
       currentIdx += 1
       res
     }
 
     def rewind: Unit = {
+      //assert(currentIdx >= 0)
       currentIdx -= 1
     }
   }
@@ -109,6 +114,7 @@ class SudokuSolver(game: SudokuGame) {
         ccol = (startCol + col) % 9 + 1
         if game.grid.isEmpty(startRow, ccol)
       ) yield (startRow, ccol)
+      assert(values.nonEmpty)
     }
 
   private def nextRow(startRow: Index, startCol: Index): MyIterator =
@@ -121,6 +127,7 @@ class SudokuSolver(game: SudokuGame) {
         crow = (startRow + row) % 9 + 1
         if game.grid.isEmpty(crow, startCol)
       ) yield (crow, startCol)
+      assert(values.nonEmpty)
     }
 
   private def nextInGrid(startRow: Index, startCol: Index): MyIterator =
@@ -130,7 +137,7 @@ class SudokuSolver(game: SudokuGame) {
         col <- getSubgridIndicesRolling(startCol)
         if game.grid.isEmpty(row, col)
       } yield (row, col))
-
+      assert(values.nonEmpty)
     }
 
 

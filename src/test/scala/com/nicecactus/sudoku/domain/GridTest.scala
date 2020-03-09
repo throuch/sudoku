@@ -4,17 +4,6 @@ import com.nicecactus.sudoku.domain.Grid.getSubgridIndicesRolling
 import org.scalatest.FlatSpec
 
 class GridTest extends FlatSpec {
-  val gridFixture = Array(
-    Array(0, 0, 5, 3, 0, 0, 0, 0, 0),
-    Array(8, 0, 0, 0, 0, 0, 0, 2, 0),
-    Array(0, 7, 0, 0, 1, 0, 5, 0, 0),
-    Array(4, 0, 0, 0, 0, 5, 3, 0, 0),
-    Array(0, 1, 0, 0, 7, 0, 0, 0, 6),
-    Array(0, 0, 3, 2, 0, 0, 0, 8, 0),
-    Array(0, 6, 0, 5, 0, 0, 0, 0, 9),
-    Array(0, 0, 4, 0, 0, 0, 0, 3, 0),
-    Array(0, 0, 0, 0, 0, 9, 7, 0, 0)
-  )
 
   behavior of "GridTest"
 
@@ -31,6 +20,17 @@ class GridTest extends FlatSpec {
   }
 
   it should "validateDimensions" in {
+    val gridFixture = Array(
+      Array(0, 0, 5, 3, 0, 0, 0, 0, 0),
+      Array(8, 0, 0, 0, 0, 0, 0, 2, 0),
+      Array(0, 7, 0, 0, 1, 0, 5, 0, 0),
+      Array(4, 0, 0, 0, 0, 5, 3, 0, 0),
+      Array(0, 1, 0, 0, 7, 0, 0, 0, 6),
+      Array(0, 0, 3, 2, 0, 0, 0, 8, 0),
+      Array(0, 6, 0, 5, 0, 0, 0, 0, 9),
+      Array(0, 0, 4, 0, 0, 0, 0, 3, 0),
+      Array(0, 0, 0, 0, 0, 9, 7, 0, 0)
+    )
     assert(new Grid(gridFixture).validateDimensions())
   }
 
