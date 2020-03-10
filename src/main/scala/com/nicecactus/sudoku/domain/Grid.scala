@@ -19,9 +19,8 @@ class Grid(val numbers: Array[Array[Digit]]) {
   assert(validateContent())
 
 
-  def validateDimensions(): Boolean = {
+  def validateDimensions(): Boolean =
     numbers.forall(_.length == columnCount) && numbers.length == rowCount
-  }
 
   /**
    * test
@@ -91,8 +90,6 @@ object Grid {
     val offset = ((idx - 1) % 3)
     val base = idx - offset
     List(idx, (offset + 1) % 3 + base, (offset + 2) % 3 + base)
-
-
   }
 
 }

@@ -36,12 +36,11 @@ class SudokuGame(val grid: Grid) {
     grid.getDigit(row, col) == 0 && !getSubgridDigits(row, col).contains(digit)
 
 
-  def getSubgridDigits(row: Index, col: Index): Set[Digit] = {
+  def getSubgridDigits(row: Index, col: Index): Set[Digit] =
     (for (
       i <- getSubgridIndices(row);
       j <- getSubgridIndices(col)
     ) yield grid.getDigit(i, j)).toSet - 0
-  }
 
   def getLineDigits(row: Index): Set[Digit] = (for (j <- 1 to 9) yield grid.getDigit(row, j)).toSet - 0
 

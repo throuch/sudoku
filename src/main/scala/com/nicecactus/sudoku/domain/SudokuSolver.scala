@@ -2,102 +2,22 @@ package com.nicecactus.sudoku.domain
 
 
 class SudokuSolver(game: SudokuGame) {
-
   import Grid._
 
-  trait MyIterator extends Iterator[(Index, Index)] {
-    var currentIdx = 0
-    val values: Seq[(Index, Index)]
-
-    override def hasNext: Boolean = {
-      assert(currentIdx >= 0)
-      (currentIdx < values.length)
-    }
-
-    override def next(): (Index, Index) = {
-      assert(currentIdx >= 0)
-      val res = values(currentIdx)
-      currentIdx += 1
-      res
-    }
-
-    def rewind: Unit = {
-      //assert(currentIdx >= 0)
-      currentIdx -= 1
-    }
-  }
-
+  type MyIterator = Iterator[(Index, Index)]
 
   val digitList = (1 to 9).toSet
-
-
-  var nextIterator: MyIterator = new MyIterator {
-    override val values: Seq[(Index, Index)] = List.empty
-  }
 
   var emptyBoxes: Int = countEmptyBoxes()
 
   def solve(): Unit = {
-    //    Console.err.println(s"Debug: starting from ($srow, $scol)")
-    //    Console.err.println(s"Debug: starting from ($startingRow, $startingCol)")
-
-    //displayOptima()
-
-    tryCombo()
-    //println("")
+    //SudokuSolver.displayOptima(game)
+    tryCombo(Iterator.empty[(Index, Index)])
     game.grid.display()
-    //println(s"solved = $res")
   }
 
-
-  def countEmptyBoxes(): Int = {
-    (for (r <- 1 to 9; c <- 1 to 9 if game.grid.isEmpty(r, c)) yield
-      (r, c)).size
-  }
-
-  def displayOptima(): Unit = {
-
-    Console.err.println(s"best subgrid : ${
-      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
-        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
-          val max = game.getSubgridDigits(e._1, e._2).size
-          //        val max1 = game.getLineDigits(e._1).size
-          //        val max2 = game.getColumnDigits(e._2).size
-          //
-          if (max > acc._1)
-            (max, e)
-          else
-            acc
-        })
-    }")
-
-    Console.err.println(s"best column : ${
-      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
-        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
-          //        val max1 = game.getLineDigits(e._1).size
-          val max = game.getColumnDigits(e._2).size
-          //
-          if (max > acc._1)
-            (max, e)
-          else
-            acc
-        })
-    }")
-
-    Console.err.println(s"best line : ${
-      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
-        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
-          val max = game.getLineDigits(e._1).size
-          //        val max2 = game.getColumnDigits(e._2).size
-          //
-          if (max > acc._1)
-            (max, e)
-          else
-            acc
-        })
-    }")
-
-  }
+  def countEmptyBoxes(): Int =
+    (for (r <- 1 to 9; c <- 1 to 9 if game.grid.isEmpty(r, c)) yield 1).size
 
   def possibleValues(row: Index, col: Index): Set[Digit] =
     digitList --
@@ -106,39 +26,25 @@ class SudokuSolver(game: SudokuGame) {
       game.getColumnDigits(col)
 
   private def nextCol(startRow: Index, startCol: Index): MyIterator =
-    new MyIterator {
-      //assert(row >= 1 && row <= 9)
-      //assert(col >= 1 && col <= 9)
-      override val values = for (
-        col <- (-1 until 8);
-        ccol = (startCol + col) % 9 + 1
-        if game.grid.isEmpty(startRow, ccol)
-      ) yield (startRow, ccol)
-      assert(values.nonEmpty)
-    }
+    (for (
+      col <- (-1 until 8);
+      ccol = (startCol + col) % 9 + 1
+      if game.grid.isEmpty(startRow, ccol)
+    ) yield (startRow, ccol)).iterator
 
   private def nextRow(startRow: Index, startCol: Index): MyIterator =
-    new MyIterator {
-      //assert(row >= 1 && row <= 9)
-      //assert(col >= 1 && col <= 9)
-
-      override val values = for (
-        row <- (-1 until 8);
-        crow = (startRow + row) % 9 + 1
-        if game.grid.isEmpty(crow, startCol)
-      ) yield (crow, startCol)
-      assert(values.nonEmpty)
-    }
+    (for (
+      row <- (-1 until 8);
+      crow = (startRow + row) % 9 + 1
+      if game.grid.isEmpty(crow, startCol)
+    ) yield (crow, startCol)).iterator
 
   private def nextInGrid(startRow: Index, startCol: Index): MyIterator =
-    new MyIterator {
-      override val values = (for {
-        row <- getSubgridIndicesRolling(startRow)
-        col <- getSubgridIndicesRolling(startCol)
-        if game.grid.isEmpty(row, col)
-      } yield (row, col))
-      assert(values.nonEmpty)
-    }
+    (for {
+      row <- getSubgridIndicesRolling(startRow)
+      col <- getSubgridIndicesRolling(startCol)
+      if game.grid.isEmpty(row, col)
+    } yield (row, col)).iterator
 
 
   object Constraint extends Enumeration {
@@ -185,32 +91,59 @@ class SudokuSolver(game: SudokuGame) {
       }
     }
 
-  private def nextIteratorFunc(): MyIterator = {
-    if (!nextIterator.hasNext) {
-      nextIterator = findBestConstraintIterator()
-    }
-    nextIterator
-  }
 
-  private def tryCombo(): Boolean = {
-    if (emptyBoxes == 0)
-      return true
+  private def tryCombo(inputIt: MyIterator): Boolean =
+    (emptyBoxes == 0) || {
 
-    val it = nextIteratorFunc
-    val (row, col) = it.next()
-    //val pval = possibleValues(row, col)
-    //println(s"debug: possible values ${pval.size}")
-    for (v <- possibleValues(row, col) if game.checkConstraints(row, col, v)) {
-      game.grid.setDigit(row, col, v)
-      emptyBoxes -= 1
-      if (tryCombo())
-        return true
-      //println("debug: rewind")
-      it.rewind
-      game.grid.setDigit(row, col, 0)
-      emptyBoxes += 1
+      val it = if (!inputIt.hasNext) findBestConstraintIterator() else inputIt
+      val (row, col) = it.next()
+      for (v <- possibleValues(row, col) if game.checkConstraints(row, col, v)) {
+        game.grid.setDigit(row, col, v)
+        emptyBoxes -= 1
+        if (tryCombo(it))
+          return true
+        game.grid.setDigit(row, col, 0)
+        emptyBoxes += 1
+      }
+      false
     }
-    false
-  }
 }
 
+object SudokuSolver {
+  def displayOptima(game: SudokuGame): Unit = {
+    Console.err.println(s"best subgrid : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          val max = game.getSubgridDigits(e._1, e._2).size
+
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+    Console.err.println(s"best column : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          val max = game.getColumnDigits(e._2).size
+          //
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+    Console.err.println(s"best line : ${
+      (for (r <- 1 to 9; c <- 1 to 9) yield (r, c)).
+        foldLeft[(Int, (Index, Index))]((0, (1, 1)))((acc, e) => {
+          val max = game.getLineDigits(e._1).size
+          //        val max2 = game.getColumnDigits(e._2).size
+          //
+          if (max > acc._1)
+            (max, e)
+          else
+            acc
+        })
+    }")
+  }
+}
