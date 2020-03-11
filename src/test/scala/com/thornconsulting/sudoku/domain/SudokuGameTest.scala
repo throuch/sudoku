@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku.domain
+package com.thornconsulting.sudoku.domain
 
 
 class SudokuGameTest extends org.scalatest.FlatSpec {

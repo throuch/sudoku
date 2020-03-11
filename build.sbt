@@ -12,6 +12,5 @@ lazy val scalaTest = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "Sudoku",
     libraryDependencies ++= scalaTest
   )

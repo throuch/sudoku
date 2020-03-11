@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku.domain
+package com.thornconsulting.sudoku.domain
 
 class SudokuGame(val grid: Grid) {
 
@@ -42,9 +42,9 @@ class SudokuGame(val grid: Grid) {
       j <- getSubgridIndices(col)
     ) yield grid.getDigit(i, j)).toSet - 0
 
-  def getLineDigits(row: Index): Set[Digit] = (for (j <- 1 to 9) yield grid.getDigit(row, j)).toSet - 0
+  def getLineDigits(row: Index): Set[Digit] = (1 to 9).map(grid.getDigit(row, _)).toSet - 0
 
-  def getColumnDigits(col: Index): Set[Digit] = (for (i <- 1 to 9) yield grid.getDigit(i, col)).toSet - 0
+  def getColumnDigits(col: Index): Set[Digit] = (1 to 9).map(grid.getDigit(_, col)).toSet - 0
 
 }
 

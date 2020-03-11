@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku.interfaces
+package com.thornconsulting.sudoku.interfaces
 
 trait Sudoku {
 

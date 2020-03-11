@@ -1,6 +1,6 @@
-package com.nicecactus.sudoku.domain
+package com.thornconsulting.sudoku.domain
 
-import com.nicecactus.sudoku.domain.Grid.getSubgridIndicesRolling
+import com.thornconsulting.sudoku.domain.Grid.getSubgridIndicesRolling
 import org.scalatest.FlatSpec
 
 class GridTest extends FlatSpec {

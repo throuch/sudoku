@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku.domain
+package com.thornconsulting.sudoku.domain
 
 
 /**

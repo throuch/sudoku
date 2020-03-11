@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku.application
+package com.thornconsulting.sudoku.application
 
 
 import scala.io.StdIn.readLine

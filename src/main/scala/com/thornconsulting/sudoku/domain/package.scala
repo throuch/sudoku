@@ -1,4 +1,4 @@
-package com.nicecactus.sudoku
+package com.thornconsulting.sudoku
 
 package object domain {
   //type colIndex = Int
