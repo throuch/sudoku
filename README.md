@@ -1,8 +1,10 @@
 # Sudoku
 
-[Sudoku game](https://fr.wikipedia.org/wiki/Sudoku "Sudoku Game")
+![example](https://upload.wikimedia.org/wikipedia/commons/f/ff/Sudoku-by-L2G-20050714.svg)
 
-[Sudoku solver](https://www.codingame.com/ide/puzzle/sudoku-solver "Sudoku solver") on Codingame
+Sudoku game on [Wikipedia](https://fr.wikipedia.org/wiki/Sudoku "Sudoku Game")
+
+Sudoku challenge on [CodingGame](https://www.codingame.com/ide/puzzle/sudoku-solver "Sudoku solver") 
 
 
 Optimized Sudoku solver implementation with following SLA:
